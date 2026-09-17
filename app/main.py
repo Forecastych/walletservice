@@ -7,7 +7,6 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
-from fastapi.responses import ORJSONResponse
 
 from app.api.v1 import health
 from app.api.v1.router import api_router
@@ -58,7 +57,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         description=DESCRIPTION,
         version="1.0.0",
         lifespan=lifespan,
-        default_response_class=ORJSONResponse,
+        # No custom response class: FastAPI serialises a route's return value
+        # straight to JSON bytes via Pydantic whenever a response model is
+        # declared, which every route here does. Handing it ORJSONResponse
+        # instead would re-route each response through the slower, deprecated
+        # path. Exception handlers build their responses explicitly and use
+        # app.core.http.ORJSONResponse.
         # Schema endpoints can be switched off for a public deployment.
         docs_url="/docs" if settings.docs_enabled else None,
         redoc_url="/redoc" if settings.docs_enabled else None,

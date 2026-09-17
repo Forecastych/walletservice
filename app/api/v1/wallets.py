@@ -15,6 +15,7 @@ from app.api.v1.schemas import (
     OperationResponse,
     WalletResponse,
 )
+from app.core.http import HTTP_422_UNPROCESSABLE_CONTENT
 
 router = APIRouter(prefix="/wallets", tags=["wallets"])
 
@@ -35,7 +36,7 @@ _UNAVAILABLE = {"model": ErrorResponse, "description": "Database temporarily una
     status_code=status.HTTP_201_CREATED,
     summary="Create a wallet",
     responses={
-        status.HTTP_422_UNPROCESSABLE_ENTITY: _VALIDATION,
+        HTTP_422_UNPROCESSABLE_CONTENT: _VALIDATION,
         status.HTTP_503_SERVICE_UNAVAILABLE: _UNAVAILABLE,
     },
 )
@@ -59,7 +60,7 @@ async def create_wallet(
     summary="Get the current balance of a wallet",
     responses={
         status.HTTP_404_NOT_FOUND: _NOT_FOUND,
-        status.HTTP_422_UNPROCESSABLE_ENTITY: _VALIDATION,
+        HTTP_422_UNPROCESSABLE_CONTENT: _VALIDATION,
         status.HTTP_503_SERVICE_UNAVAILABLE: _UNAVAILABLE,
     },
 )
@@ -75,7 +76,7 @@ async def get_wallet(wallet_uuid: WalletId, service: WalletServiceDep) -> Wallet
     responses={
         status.HTTP_404_NOT_FOUND: _NOT_FOUND,
         status.HTTP_409_CONFLICT: _CONFLICT,
-        status.HTTP_422_UNPROCESSABLE_ENTITY: _VALIDATION,
+        HTTP_422_UNPROCESSABLE_CONTENT: _VALIDATION,
         status.HTTP_503_SERVICE_UNAVAILABLE: _UNAVAILABLE,
     },
 )

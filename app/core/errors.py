@@ -12,11 +12,11 @@ from typing import Final
 
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import ORJSONResponse
 from sqlalchemy.exc import SQLAlchemyError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.api.v1.schemas import ErrorResponse
+from app.core.http import HTTP_422_UNPROCESSABLE_CONTENT, ORJSONResponse
 from app.core.logging import request_id_ctx
 from app.domain.exceptions import (
     DomainError,
@@ -76,7 +76,7 @@ async def validation_error_handler(_: Request, exc: Exception) -> ORJSONResponse
         for error in exc.errors()
     ]
     return _render(
-        status.HTTP_422_UNPROCESSABLE_ENTITY,
+        HTTP_422_UNPROCESSABLE_CONTENT,
         "validation_error",
         "Request validation failed",
         details,
