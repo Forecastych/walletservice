@@ -22,12 +22,23 @@ jobs:
       - uses: astral-sh/setup-uv@v4
         with:
           enable-cache: true
+          cache-dependency-glob: uv.lock
 
       - name: Set up Python
         run: uv python install ${{ env.PYTHON_VERSION }}
 
+      # Fails if pyproject.toml and uv.lock have drifted apart, so the lock
+      # cannot silently go stale.
+      - name: Verify lock file is up to date
+        run: uv lock --check --python ${{ env.PYTHON_VERSION }}
+
+      # --frozen forbids re-resolution: the job installs exactly the versions
+      # recorded in uv.lock, or it fails. The environment is then put on PATH
+      # so the steps below run the locked tools.
       - name: Install dependencies
-        run: uv pip install --system -e ".[dev]"
+        run: |
+          uv sync --frozen --extra dev --python ${{ env.PYTHON_VERSION }}
+          echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
 
       - name: Ruff (lint)
         run: ruff check app tests
@@ -71,12 +82,15 @@ jobs:
       - uses: astral-sh/setup-uv@v4
         with:
           enable-cache: true
+          cache-dependency-glob: uv.lock
 
       - name: Set up Python
         run: uv python install ${{ env.PYTHON_VERSION }}
 
       - name: Install dependencies
-        run: uv pip install --system -e ".[dev]"
+        run: |
+          uv sync --frozen --extra dev --python ${{ env.PYTHON_VERSION }}
+          echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
 
       - name: Verify migrations apply cleanly
         env:

@@ -46,6 +46,9 @@ format: ## Apply ruff formatting and autofixes
 	ruff format app tests
 
 .PHONY: install
-install: ## Create a local virtualenv with dev dependencies
-	uv venv
-	uv pip install -e ".[dev]"
+install: ## Create a local virtualenv from uv.lock, with dev dependencies
+	uv sync --frozen --extra dev
+
+.PHONY: lock
+lock: ## Re-resolve dependencies and update uv.lock
+	uv lock

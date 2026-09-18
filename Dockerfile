@@ -5,13 +5,16 @@
 # ---------------------------------------------------------------------------
 FROM python:3.12-slim-bookworm AS base
 
-COPY --from=ghcr.io/astral-sh/uv:0.5.11 /uv /usr/local/bin/uv
+COPY --from=ghcr.io/astral-sh/uv:0.11.19 /uv /usr/local/bin/uv
 
+# UV_PROJECT_ENVIRONMENT makes `uv sync` install into /opt/venv instead of
+# ./.venv, so the runtime stage copies one self-contained directory.
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     UV_COMPILE_BYTECODE=1 \
     UV_LINK_MODE=copy \
     UV_PYTHON_DOWNLOADS=never \
+    UV_PROJECT_ENVIRONMENT=/opt/venv \
     PATH="/opt/venv/bin:$PATH"
 
 WORKDIR /srv/app
@@ -21,12 +24,14 @@ WORKDIR /srv/app
 # ---------------------------------------------------------------------------
 FROM base AS builder
 
-# Dependencies change far less often than source, so they get their own layer.
-COPY pyproject.toml README.md ./
-COPY app ./app
+# Only the manifest and the lock: dependencies change far less often than
+# source, so this layer stays cached across code changes. `--frozen` forbids
+# re-resolution, so the image gets exactly the versions in uv.lock or the build
+# fails; `--no-install-project` keeps the application itself out of the venv,
+# since the runtime stage copies its source in directly.
+COPY pyproject.toml uv.lock ./
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv venv /opt/venv && \
-    VIRTUAL_ENV=/opt/venv uv pip install --no-cache .
+    uv sync --frozen --no-dev --no-install-project
 
 # ---------------------------------------------------------------------------
 # Runtime: no build tooling, no package manager, no root.
@@ -77,12 +82,11 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends postgresql-client \
     && rm -rf /var/lib/apt/lists/*
 
-COPY pyproject.toml README.md ./
-COPY app ./app
+COPY pyproject.toml uv.lock ./
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv venv /opt/venv && \
-    VIRTUAL_ENV=/opt/venv uv pip install --no-cache -e ".[dev]"
+    uv sync --frozen --extra dev --no-install-project
 
+COPY app ./app
 COPY alembic.ini ./
 COPY migrations ./migrations
 COPY tests ./tests
