@@ -107,4 +107,6 @@ class WalletOperationRepository:
             WalletOperation.wallet_id == wallet_id,
             WalletOperation.idempotency_key == idempotency_key,
         )
-        return await self._session.scalar(stmt)
+        # Session.scalar is typed as returning Any; pin it to the declared type.
+        operation: WalletOperation | None = await self._session.scalar(stmt)
+        return operation

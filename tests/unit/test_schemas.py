@@ -18,17 +18,13 @@ class TestOperationRequest:
         assert request.amount == Decimal("1000.00")
 
     def test_accepts_decimal_string(self) -> None:
-        request = OperationRequest.model_validate(
-            {"operation_type": "WITHDRAW", "amount": "12.34"}
-        )
+        request = OperationRequest.model_validate({"operation_type": "WITHDRAW", "amount": "12.34"})
 
         assert request.amount == Decimal("12.34")
         assert request.operation_type is OperationType.WITHDRAW
 
     def test_amount_is_normalised_to_two_places(self) -> None:
-        request = OperationRequest.model_validate(
-            {"operation_type": "DEPOSIT", "amount": "5.1"}
-        )
+        request = OperationRequest.model_validate({"operation_type": "DEPOSIT", "amount": "5.1"})
 
         assert request.amount == Decimal("5.10")
         assert request.amount.as_tuple().exponent == -2
@@ -36,28 +32,20 @@ class TestOperationRequest:
     @pytest.mark.parametrize("amount", [0, "0.00", -1, "-0.01"])
     def test_rejects_non_positive(self, amount: object) -> None:
         with pytest.raises(ValidationError):
-            OperationRequest.model_validate(
-                {"operation_type": "DEPOSIT", "amount": amount}
-            )
+            OperationRequest.model_validate({"operation_type": "DEPOSIT", "amount": amount})
 
     def test_rejects_sub_cent_precision(self) -> None:
         with pytest.raises(ValidationError):
-            OperationRequest.model_validate(
-                {"operation_type": "DEPOSIT", "amount": "1.001"}
-            )
+            OperationRequest.model_validate({"operation_type": "DEPOSIT", "amount": "1.001"})
 
     def test_rejects_absurd_amount(self) -> None:
         with pytest.raises(ValidationError):
-            OperationRequest.model_validate(
-                {"operation_type": "DEPOSIT", "amount": 10**15}
-            )
+            OperationRequest.model_validate({"operation_type": "DEPOSIT", "amount": 10**15})
 
     @pytest.mark.parametrize("value", ["NaN", "Infinity", "-Infinity"])
     def test_rejects_non_finite(self, value: str) -> None:
         with pytest.raises(ValidationError):
-            OperationRequest.model_validate(
-                {"operation_type": "DEPOSIT", "amount": value}
-            )
+            OperationRequest.model_validate({"operation_type": "DEPOSIT", "amount": value})
 
     def test_rejects_unknown_field(self) -> None:
         with pytest.raises(ValidationError):
@@ -67,9 +55,7 @@ class TestOperationRequest:
 
     def test_rejects_unknown_operation_type(self) -> None:
         with pytest.raises(ValidationError):
-            OperationRequest.model_validate(
-                {"operation_type": "TRANSFER", "amount": 1}
-            )
+            OperationRequest.model_validate({"operation_type": "TRANSFER", "amount": 1})
 
 
 class TestOperationType:

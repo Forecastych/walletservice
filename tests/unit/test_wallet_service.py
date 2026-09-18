@@ -54,9 +54,7 @@ class FakeOperationRepository:
         self.rows.append(row)
         return row
 
-    async def get_by_idempotency_key(
-        self, wallet_id: uuid.UUID, idempotency_key: str
-    ) -> Any:
+    async def get_by_idempotency_key(self, wallet_id: uuid.UUID, idempotency_key: str) -> Any:
         for row in self.rows:
             if row.wallet_id == wallet_id and row.idempotency_key == idempotency_key:
                 return row
@@ -127,9 +125,7 @@ class TestPerformOperation:
         wallet_id = uuid.uuid4()
         balances[wallet_id] = Decimal("10.00")
 
-        result = await service.perform_operation(
-            wallet_id, OperationType.DEPOSIT, Decimal("5.00")
-        )
+        result = await service.perform_operation(wallet_id, OperationType.DEPOSIT, Decimal("5.00"))
 
         assert result.balance == Decimal("15.00")
         assert result.replayed is False
@@ -140,17 +136,13 @@ class TestPerformOperation:
         wallet_id = uuid.uuid4()
         balances[wallet_id] = Decimal("10.00")
 
-        result = await service.perform_operation(
-            wallet_id, OperationType.WITHDRAW, Decimal("4.00")
-        )
+        result = await service.perform_operation(wallet_id, OperationType.WITHDRAW, Decimal("4.00"))
 
         assert result.balance == Decimal("6.00")
 
     async def test_missing_wallet_raises(self, service: WalletService) -> None:
         with pytest.raises(WalletNotFoundError):
-            await service.perform_operation(
-                uuid.uuid4(), OperationType.DEPOSIT, Decimal("1.00")
-            )
+            await service.perform_operation(uuid.uuid4(), OperationType.DEPOSIT, Decimal("1.00"))
 
     async def test_overdraft_raises(
         self, service: WalletService, balances: dict[uuid.UUID, Decimal]
@@ -159,9 +151,7 @@ class TestPerformOperation:
         balances[wallet_id] = Decimal("1.00")
 
         with pytest.raises(InsufficientFundsError):
-            await service.perform_operation(
-                wallet_id, OperationType.WITHDRAW, Decimal("2.00")
-            )
+            await service.perform_operation(wallet_id, OperationType.WITHDRAW, Decimal("2.00"))
 
         assert balances[wallet_id] == Decimal("1.00")
 
@@ -222,9 +212,7 @@ class TestRetryPolicy:
         factory = ExplodingUnitOfWork(lambda: FakeUnitOfWork(balances, operations), failures=2)
         service = WalletService(uow_factory=factory, retry_attempts=3)  # type: ignore[arg-type]
 
-        result = await service.perform_operation(
-            wallet_id, OperationType.DEPOSIT, Decimal("5.00")
-        )
+        result = await service.perform_operation(wallet_id, OperationType.DEPOSIT, Decimal("5.00"))
 
         assert result.balance == Decimal("15.00")
         assert factory.attempts == 3
@@ -238,9 +226,7 @@ class TestRetryPolicy:
         service = WalletService(uow_factory=factory, retry_attempts=3)  # type: ignore[arg-type]
 
         with pytest.raises(ServiceUnavailableError):
-            await service.perform_operation(
-                wallet_id, OperationType.DEPOSIT, Decimal("5.00")
-            )
+            await service.perform_operation(wallet_id, OperationType.DEPOSIT, Decimal("5.00"))
 
         assert factory.attempts == 3
 

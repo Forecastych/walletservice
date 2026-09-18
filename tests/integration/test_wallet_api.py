@@ -34,9 +34,7 @@ class TestCreateWallet:
 
 
 class TestGetWallet:
-    async def test_returns_balance(
-        self, client: AsyncClient, funded_wallet_id: uuid.UUID
-    ) -> None:
+    async def test_returns_balance(self, client: AsyncClient, funded_wallet_id: uuid.UUID) -> None:
         response = await client.get(f"{WALLETS}/{funded_wallet_id}")
 
         assert response.status_code == 200
@@ -200,9 +198,7 @@ class TestIdempotency:
         headers = {"Idempotency-Key": "order-4711"}
         payload = {"operation_type": "DEPOSIT", "amount": 100}
 
-        first = await client.post(
-            f"{WALLETS}/{wallet_id}/operation", json=payload, headers=headers
-        )
+        first = await client.post(f"{WALLETS}/{wallet_id}/operation", json=payload, headers=headers)
         second = await client.post(
             f"{WALLETS}/{wallet_id}/operation", json=payload, headers=headers
         )
@@ -234,9 +230,7 @@ class TestIdempotency:
         assert response.status_code == 409
         assert response.json()["code"] == "idempotency_key_conflict"
 
-    async def test_same_key_on_different_wallets_is_independent(
-        self, client: AsyncClient
-    ) -> None:
+    async def test_same_key_on_different_wallets_is_independent(self, client: AsyncClient) -> None:
         headers = {"Idempotency-Key": "shared-key"}
         payload = {"operation_type": "DEPOSIT", "amount": 50}
         first_id = (await client.post(WALLETS)).json()["id"]

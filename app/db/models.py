@@ -15,7 +15,7 @@ from sqlalchemy import (
     func,
     text,
 )
-from sqlalchemy.dialects.postgresql import UUID as PgUUID
+from sqlalchemy.dialects.postgresql import UUID as PgUUID  # noqa: N811 - a class, not a constant
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base

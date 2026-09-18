@@ -34,9 +34,7 @@ def create_engine(settings: Settings) -> AsyncEngine:
                 # must surface as an error, not as an exhausted connection pool.
                 "statement_timeout": str(settings.db_statement_timeout_ms),
                 "lock_timeout": str(settings.db_lock_timeout_ms),
-                "idle_in_transaction_session_timeout": str(
-                    settings.db_statement_timeout_ms * 2
-                ),
+                "idle_in_transaction_session_timeout": str(settings.db_statement_timeout_ms * 2),
             },
             "timeout": settings.db_pool_timeout_seconds,
         },
@@ -77,4 +75,3 @@ def get_session_factory() -> async_sessionmaker[AsyncSession]:
     if _session_factory is None:  # pragma: no cover - guarded by app lifespan
         raise RuntimeError("Session factory is not initialised")
     return _session_factory
-

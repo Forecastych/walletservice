@@ -176,9 +176,7 @@ class WalletService:
             # still what guarantees correctness; this lookup only avoids
             # touching the balance when the answer is already known.
             if idempotency_key is not None:
-                existing = await uow.operations.get_by_idempotency_key(
-                    wallet_id, idempotency_key
-                )
+                existing = await uow.operations.get_by_idempotency_key(wallet_id, idempotency_key)
                 if existing is not None:
                     result = OperationResult(
                         wallet_id=existing.wallet_id,

@@ -54,9 +54,7 @@ class TestParallelWithdrawals:
 
         succeeded = [r for r in results if isinstance(r, OperationResult)]
         refused = [r for r in results if isinstance(r, InsufficientFundsError)]
-        unexpected = [
-            r for r in results if isinstance(r, BaseException) and r not in refused
-        ]
+        unexpected = [r for r in results if isinstance(r, BaseException) and r not in refused]
 
         assert not unexpected, f"unexpected failures: {unexpected}"
         assert len(succeeded) == 10
@@ -136,9 +134,9 @@ class TestParallelMixedOperations:
                 )
             )
             journal_rows = await session.scalar(
-                select(func.count()).select_from(WalletOperation).where(
-                    WalletOperation.wallet_id == wallet.id
-                )
+                select(func.count())
+                .select_from(WalletOperation)
+                .where(WalletOperation.wallet_id == wallet.id)
             )
 
         final = await service.get_wallet(wallet.id)
@@ -171,9 +169,7 @@ class TestConcurrentIdempotency:
 
         responses = await asyncio.gather(
             *(
-                client.post(
-                    f"{WALLETS}/{wallet_id}/operation", json=payload, headers=headers
-                )
+                client.post(f"{WALLETS}/{wallet_id}/operation", json=payload, headers=headers)
                 for _ in range(20)
             )
         )

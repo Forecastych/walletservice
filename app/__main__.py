@@ -8,7 +8,8 @@ from app.core.config import get_settings
 
 
 def main() -> None:
-    settings = get_settings()
+    # Fail fast on invalid configuration, before uvicorn binds the port.
+    get_settings()
     uvicorn.run(
         "app.main:app",
         host="0.0.0.0",  # noqa: S104 - bound inside a container network

@@ -97,9 +97,11 @@ async def client(engine: AsyncEngine, settings: Settings) -> AsyncIterator[Async
     app = create_app(settings)
     transport = ASGITransport(app=app)
 
-    async with app.router.lifespan_context(app):
-        async with AsyncClient(transport=transport, base_url="http://test") as http_client:
-            yield http_client
+    async with (
+        app.router.lifespan_context(app),
+        AsyncClient(transport=transport, base_url="http://test") as http_client,
+    ):
+        yield http_client
 
 
 @pytest_asyncio.fixture
@@ -113,9 +115,6 @@ async def wallet_id(client: AsyncClient) -> uuid.UUID:
 @pytest_asyncio.fixture
 async def funded_wallet_id(client: AsyncClient) -> uuid.UUID:
     """A wallet pre-loaded with 1000.00."""
-    response = await client.post(
-        "/api/v1/wallets", json={"initial_balance": "1000.00"}
-    )
+    response = await client.post("/api/v1/wallets", json={"initial_balance": "1000.00"})
     assert response.status_code == 201
     return uuid.UUID(response.json()["id"])
-
